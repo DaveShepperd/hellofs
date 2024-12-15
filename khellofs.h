@@ -33,15 +33,15 @@ void hellofs_kill_superblock(struct super_block *sb);
 void hellofs_destroy_inode(struct inode *inode);
 void hellofs_put_super(struct super_block *sb);
 
-int hellofs_create(struct inode *dir, struct dentry *dentry,
+int hellofs_create(struct mnt_idmap *idmap, struct inode *dir, struct dentry *dentry,
                     umode_t mode, bool excl);
 struct dentry *hellofs_lookup(struct inode *parent_inode,
                                struct dentry *child_dentry,
                                unsigned int flags);
-int hellofs_mkdir(struct inode *dir, struct dentry *dentry,
+int hellofs_mkdir(struct mnt_idmap *idmap, struct inode *dir, struct dentry *dentry,
                    umode_t mode);
 
-int hellofs_readdir(struct file *filp, void *dirent, filldir_t filldir);
+int hellofs_readdir(struct file *filp, struct dir_context *dirCtx /*void *dirent, filldir_t filldir*/);
 
 ssize_t hellofs_read(struct file * filp, char __user * buf, size_t len,
                       loff_t * ppos);

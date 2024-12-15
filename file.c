@@ -45,20 +45,25 @@ ssize_t hellofs_read(struct file *filp, char __user *buf, size_t len,
    we will use write to pagecache instead. */
 ssize_t hellofs_write(struct file *filp, const char __user *buf, size_t len,
                       loff_t *ppos) {
+#if 0
     struct super_block *sb;
     struct inode *inode;
     struct hellofs_inode *hellofs_inode;
     struct buffer_head *bh;
     struct hellofs_superblock *hellofs_sb;
+	struct kiocb kiocb;
+	struct iov_iter iiter;
     char *buffer;
     int ret;
+	ssize_t retSize;
 
-    inode = filp->f_path.dentry->d_inode;
+	init_sync_kiocb(&kiocb, filp);
+	kiocb.ki_pos = *ppos;
+	inode = file_dentry(filp)->d_inode;
     sb = inode->i_sb;
     hellofs_inode = HELLOFS_INODE(inode);
     hellofs_sb = HELLOFS_SB(sb);
-
-    ret = generic_write_checks(filp, ppos, &len, 0);
+    retSize = generic_write_checks(&kiocb, ppos, &len, 0);
     if (ret) {
         return ret;
     }
@@ -91,4 +96,8 @@ ssize_t hellofs_write(struct file *filp, const char __user *buf, size_t len,
     /* TODO We didn't update file size here. To be frank I don't know how. */
 
     return len;
+#else
+	printk(KERN_ERR "hellofs() No support for writing.\n");
+	return -EFAULT;
+#endif
 }

@@ -34,6 +34,8 @@ struct hellofs_inode {
     };
 };
 
+#define HELLOFS_SB_FLAG_VERBOSE (1)
+
 struct hellofs_superblock {
     uint64_t version;
     uint64_t magic;
@@ -44,6 +46,9 @@ struct hellofs_superblock {
 
     uint64_t data_block_table_size;
     uint64_t data_block_count;
+	
+	uint32_t flags;
+	uint32_t misc;
 };
 
 static const uint64_t HELLOFS_SUPERBLOCK_BLOCK_NO = 0;

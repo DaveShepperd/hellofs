@@ -30,6 +30,8 @@ int main(int argc, char *argv[]) {
         .inode_count = 2,
         .data_block_table_size = HELLOFS_DEFAULT_DATA_BLOCK_TABLE_SIZE,
         .data_block_count = 2,
+		.flags = 0,
+		.misc = 0,
     };
 
     // construct inode bitmap
@@ -67,15 +69,16 @@ int main(int argc, char *argv[]) {
 
     // construct root inode data block
     struct hellofs_dir_record root_dir_records[] = {
-        {
-            .filename = "wel_helo.txt",
-            .inode_no = welcome_inode_no,
-        },
+		{
+			.filename = "wel_helo.txt",
+			.inode_no = welcome_inode_no,
+		},
     };
 
     ret = 0;
     do {
         // write super block
+        printf("Writing %ld byte superblock at file offset 0x%lX\n", sizeof(hellofs_sb), lseek(fd,0,SEEK_CUR));
         if (sizeof(hellofs_sb)
                 != write(fd, &hellofs_sb, sizeof(hellofs_sb))) {
             ret = -1;
@@ -88,6 +91,7 @@ int main(int argc, char *argv[]) {
         }
 
         // write inode bitmap
+        printf("Writing %ld byte inode bitmap at file offset 0x%lX\n", sizeof(inode_bitmap), lseek(fd,0,SEEK_CUR));
         if (sizeof(inode_bitmap)
                 != write(fd, inode_bitmap, sizeof(inode_bitmap))) {
             ret = -3;
@@ -95,6 +99,7 @@ int main(int argc, char *argv[]) {
         }
 
         // write data block bitmap
+        printf("Writing %ld byte data block bitmap at file offset 0x%lX\n", sizeof(data_block_bitmap), lseek(fd,0,SEEK_CUR));
         if (sizeof(data_block_bitmap)
                 != write(fd, data_block_bitmap,
                          sizeof(data_block_bitmap))) {
@@ -103,6 +108,7 @@ int main(int argc, char *argv[]) {
         }
 
         // write root inode
+        printf("Writing %ld byte root inode at file offset 0x%lX\n", sizeof(root_hellofs_inode), lseek(fd,0,SEEK_CUR));
         if (sizeof(root_hellofs_inode)
                 != write(fd, &root_hellofs_inode,
                          sizeof(root_hellofs_inode))) {
@@ -111,6 +117,7 @@ int main(int argc, char *argv[]) {
         }
 
         // write welcome file inode
+        printf("Writing %ld byte welcome inode at file offset 0x%lX\n", sizeof(welcome_hellofs_inode), lseek(fd,0,SEEK_CUR));
         if (sizeof(welcome_hellofs_inode)
                 != write(fd, &welcome_hellofs_inode,
                          sizeof(welcome_hellofs_inode))) {
@@ -128,9 +135,8 @@ int main(int argc, char *argv[]) {
             ret = -7;
             break;
         }
-        if (sizeof(root_dir_records)
-                != write(fd, root_dir_records,
-                         sizeof(root_dir_records))) {
+        printf("Writing %ld byte root dir records (%ld entries) at file offset 0x%lX\n", sizeof(root_dir_records), sizeof(root_dir_records)/sizeof(struct hellofs_dir_record), lseek(fd,0,SEEK_CUR));
+        if (sizeof(root_dir_records) != write(fd, root_dir_records, sizeof(root_dir_records))) {
             ret = -8;
             break;
         }
@@ -145,6 +151,7 @@ int main(int argc, char *argv[]) {
             ret = -9;
             break;
         }
+        printf("Writing %ld byte welcome body at file offset 0x%lX\n", sizeof(welcome_body), lseek(fd,0,SEEK_CUR));
         if (sizeof(welcome_body) != write(fd, welcome_body,
                                           sizeof(welcome_body))) {
             ret = -10;

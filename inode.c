@@ -14,10 +14,15 @@ void hellofs_fill_inode(struct super_block *sb, struct inode *inode,
     inode->i_sb = sb;
     inode->i_ino = hellofs_inode->inode_no;
     inode->i_op = &hellofs_inode_ops;
+	inode_set_atime_to_ts(inode, current_time(inode));
+	inode_set_mtime_to_ts(inode, inode_get_atime(inode));
+	inode_set_ctime_to_ts(inode, inode_get_atime(inode));
+#if 0
     // TODO hope we can use hellofs_inode to store timespec
     inode->i_atime = inode->i_mtime 
                    = inode->i_ctime
                    = CURRENT_TIME;
+#endif
     inode->i_private = hellofs_inode;    
     
     if (S_ISDIR(hellofs_inode->mode)) {
@@ -238,7 +243,7 @@ int hellofs_create_inode(struct inode *dir, struct dentry *dentry,
         return -ENOSPC;
     }
 
-    inode_init_owner(inode, dir, mode);
+    inode_init_owner(&nop_mnt_idmap, inode, dir, mode);
     d_add(dentry, inode);
 
     /* TODO we should free newly allocated inodes when error occurs */
@@ -246,12 +251,12 @@ int hellofs_create_inode(struct inode *dir, struct dentry *dentry,
     return 0;
 }
 
-int hellofs_create(struct inode *dir, struct dentry *dentry,
+int hellofs_create(struct mnt_idmap *idmap, struct inode *dir, struct dentry *dentry,
                    umode_t mode, bool excl) {
     return hellofs_create_inode(dir, dentry, mode);
 }
 
-int hellofs_mkdir(struct inode *dir, struct dentry *dentry,
+int hellofs_mkdir(struct mnt_idmap *idmap, struct inode *dir, struct dentry *dentry,
                   umode_t mode) {
     /* @Sankar: The mkdir callback does not have S_IFDIR set.
        Even ext2 sets it explicitly. Perhaps this is a bug */
@@ -274,6 +279,8 @@ struct dentry *hellofs_lookup(struct inode *dir,
     BUG_ON(!bh);
 
     dir_record = (struct hellofs_dir_record *)bh->b_data;
+	pr_info("hellofs_lookup(): parent=%p, sb=%p, dir=%p, child_dentry=%p, flags=0x%X, children=%lld\n",
+			parent_hellofs_inode, sb, dir, child_dentry, flags, parent_hellofs_inode->dir_children_count);
 
     for (i = 0; i < parent_hellofs_inode->dir_children_count; i++) {
         printk(KERN_INFO "hellofs_lookup: i=%llu, dir_record->filename=%s, child_dentry->d_name.name=%s", i, dir_record->filename, child_dentry->d_name.name);    // TODO
@@ -285,7 +292,7 @@ struct dentry *hellofs_lookup(struct inode *dir,
                 return NULL; 
             }
             hellofs_fill_inode(sb, child_inode, hellofs_child_inode);
-            inode_init_owner(child_inode, dir, hellofs_child_inode->mode);
+            inode_init_owner(&nop_mnt_idmap, child_inode, dir, hellofs_child_inode->mode);
             d_add(child_dentry, child_inode);
             return NULL;    
         }

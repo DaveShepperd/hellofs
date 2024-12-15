@@ -23,7 +23,7 @@ const struct inode_operations hellofs_inode_ops = {
 
 const struct file_operations hellofs_dir_operations = {
     .owner = THIS_MODULE,
-    .readdir = hellofs_readdir,
+	.iterate_shared = hellofs_readdir,
 };
 
 const struct file_operations hellofs_file_operations = {
@@ -40,7 +40,7 @@ static int __init hellofs_init(void)
     hellofs_inode_cache = kmem_cache_create("hellofs_inode_cache",
                                          sizeof(struct hellofs_inode),
                                          0,
-                                         (SLAB_RECLAIM_ACCOUNT| SLAB_MEM_SPREAD),
+                                         (SLAB_RECLAIM_ACCOUNT /*| SLAB_MEM_SPREAD*/),
                                          NULL);
     if (!hellofs_inode_cache) {
         return -ENOMEM;

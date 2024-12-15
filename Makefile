@@ -6,13 +6,16 @@ CFLAGS_inode.o := -DDEBUG
 CFLAGS_dir.o := -DDEBUG
 CFLAGS_file.o := -DDEBUG
 
-all: ko mkfs-hellofs
+all: ko mkfs-hellofs dmpfs
 
 ko:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
 
 mkfs-hellofs_SOURCES:
 	mkfs-hellofs.c hellofs.h
+
+dmpfs_SOURCES:
+	dmpfs.c hellofs.h
 
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean

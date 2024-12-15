@@ -1,4 +1,43 @@
 #include "khellofs.h"
+#include <linux/parser.h>
+
+#define HELLOFS_MNT_OPT_RO 1
+#define HELLOFS_MNT_OPT_VERBOSE 2
+
+static const match_table_t tokens = {
+    {HELLOFS_MNT_OPT_RO, "ro"},
+	{HELLOFS_MNT_OPT_VERBOSE, "verbose"},
+	{0,NULL}
+};
+
+static int hellofs_parse_options(struct super_block *sb, char *options)
+{
+    substring_t args[MAX_OPT_ARGS];
+    int token;
+    char *p;
+
+    pr_info("hellofs_parse_options: parsing options '%s'\n", options);
+
+    while ((p = strsep(&options, ","))) {
+        if (!*p)
+            continue;
+
+        args[0].to = args[0].from = NULL;
+        token = match_token(p, tokens, args);
+		if ( token == HELLOFS_MNT_OPT_RO )
+		{
+			pr_info("hellofs_parse_options: found read-only. Current flags: 0x%lX\n", sb->s_flags);
+			sb->s_flags |= SB_RDONLY;
+		}
+		else if ( token == HELLOFS_MNT_OPT_VERBOSE )
+		{
+			struct hellofs_superblock *sbi = (struct hellofs_superblock *)sb->s_fs_info;
+			pr_info("hellofs_parse_options: found verbose. Current flags: 0x%X\n", sbi->flags);
+			sbi->flags |= HELLOFS_SB_FLAG_VERBOSE;
+		}
+	}
+	return 0;
+}
 
 static int hellofs_fill_super(struct super_block *sb, void *data, int silent) {
     struct inode *root_inode;
@@ -36,7 +75,7 @@ static int hellofs_fill_super(struct super_block *sb, void *data, int silent) {
         goto release;
     }
     hellofs_fill_inode(sb, root_inode, root_hellofs_inode);
-    inode_init_owner(root_inode, NULL, root_inode->i_mode);
+    inode_init_owner(&nop_mnt_idmap, root_inode, NULL, root_inode->i_mode);
 
     sb->s_root = d_make_root(root_inode);
     if (!sb->s_root) {
@@ -44,6 +83,15 @@ static int hellofs_fill_super(struct super_block *sb, void *data, int silent) {
         goto release;
     }
 
+    ret = hellofs_parse_options(sb, data);
+    if (ret) {
+        pr_err("hellofs_fill_super: Failed to parse options, error code: %d\n",
+               ret);
+    }
+	if ( (hellofs_sb->flags & HELLOFS_SB_FLAG_VERBOSE) )
+	{
+		pr_info("hellofs_fill_super: Finished. sb->flags=0x%lX, sbi->flags=0x%X\n", sb->s_flags, hellofs_sb->flags);
+	}
 release:
     brelse(bh);
     return ret;
