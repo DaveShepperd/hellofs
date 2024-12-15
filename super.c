@@ -1,5 +1,4 @@
 #include "khellofs.h"
-#include <linux/parser.h>
 
 #define HELLOFS_MNT_OPT_RO 1
 #define HELLOFS_MNT_OPT_VERBOSE 2
@@ -135,3 +134,21 @@ void hellofs_save_sb(struct super_block *sb) {
     sync_dirty_buffer(bh);
     brelse(bh);
 }
+
+int hellofs_statfs(struct dentry *dirp, struct kstatfs *statp)
+{
+    struct super_block *sb = dirp->d_sb;
+    struct hellofs_superblock *sbi = HELLOFS_SB(sb);
+
+    statp->f_type = HELLOFS_MAGIC;
+    statp->f_bsize = HELLOFS_DEFAULT_BLOCKSIZE;
+    statp->f_blocks = sbi->fs_size/HELLOFS_DEFAULT_BLOCKSIZE;
+	statp->f_bfree = statp->f_blocks - sbi->data_block_count - sbi->inode_count;
+    statp->f_bavail = sbi->data_block_table_size-sbi->data_block_count;
+    statp->f_files = sbi->inode_table_size;
+	statp->f_ffree = sbi->inode_table_size - sbi->inode_count;
+    statp->f_namelen = HELLOFS_FILENAME_MAXLEN;
+
+    return 0;
+}
+

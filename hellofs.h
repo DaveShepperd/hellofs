@@ -49,6 +49,8 @@ struct hellofs_superblock {
 	
 	uint32_t flags;
 	uint32_t misc;
+	
+	uint64_t fs_size;
 };
 
 static const uint64_t HELLOFS_SUPERBLOCK_BLOCK_NO = 0;

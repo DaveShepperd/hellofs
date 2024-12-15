@@ -14,6 +14,7 @@
 #include <linux/slab.h>
 #include <linux/time.h>
 #include <linux/version.h>
+#include <linux/statfs.h>
 
 #include "hellofs.h"
 
@@ -106,5 +107,6 @@ int hellofs_add_dir_record(struct super_block *sb, struct inode *dir,
 int hellofs_alloc_data_block(struct super_block *sb, uint64_t *out_data_block_no);
 int hellofs_create_inode(struct inode *dir, struct dentry *dentry,
                          umode_t mode);
+int hellofs_statfs(struct dentry *dirp, struct kstatfs *statp);
 
 #endif /*__KHELLOFS_H__*/

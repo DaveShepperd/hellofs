@@ -13,6 +13,7 @@ struct file_system_type hellofs_fs_type = {
 const struct super_operations hellofs_sb_ops = {
     .destroy_inode = hellofs_destroy_inode,
     .put_super = hellofs_put_super,
+	.statfs = hellofs_statfs,
 };
 
 const struct inode_operations hellofs_inode_ops = {

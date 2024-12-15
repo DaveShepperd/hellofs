@@ -6,21 +6,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "hellofs.h"
 
 int main(int argc, char *argv[]) {
-    int fd;
+    int fd, sts;
     ssize_t ret;
     uint64_t welcome_inode_no;
     uint64_t welcome_data_block_no_offset;
-
-    fd = open(argv[1], O_RDWR);
-    if (fd == -1) {
-        perror("Error opening the device");
-        return -1;
-    }
-
+    struct stat st;
     // construct superblock
     struct hellofs_superblock hellofs_sb = {
         .version = 1,
@@ -30,9 +25,23 @@ int main(int argc, char *argv[]) {
         .inode_count = 2,
         .data_block_table_size = HELLOFS_DEFAULT_DATA_BLOCK_TABLE_SIZE,
         .data_block_count = 2,
-		.flags = 0,
-		.misc = 0,
+        .flags = 0,
+        .misc = 0,
     };
+
+    sts = stat(argv[1],&st);
+    if ( sts < 0 )
+    {
+        fprintf(stderr,"Unable to stat '%s': %s\n", argv[1], strerror(errno));
+        return -1;
+    }
+    hellofs_sb.fs_size = st.st_size;
+    
+    fd = open(argv[1], O_RDWR);
+    if (fd == -1) {
+        perror("Error opening the device");
+        return -1;
+    }
 
     // construct inode bitmap
     char inode_bitmap[hellofs_sb.blocksize];
